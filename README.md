@@ -9,6 +9,8 @@ Desafio Back-End PL
     Rest
     H2 Database
 
+## 1. Requisitos e Configurações
+
 Para executar o projeto é necessária a instalação das seguintes ferramentas:
 
     1. JDK 1.8
