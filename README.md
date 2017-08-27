@@ -15,7 +15,9 @@ Para executar o projeto é necessária a instalação das seguintes ferramentas:
     2. Maven (versão 3.3.9 - testada)
 
 ## Instruções para execução
+
 1 - Clone o projeto https://github.com/rodrigosqr/xy-inc.git
+
 2 - Entre na pasta xy-inc através de um terminal e execute os comandos abaixo:
 ```sh
 $ mvn clean package
@@ -33,9 +35,9 @@ Salvar um Poi
 POST http://localhost:9091/poi
 
 {
-	"name" : "Pub",
-	"coordinateX" : 12,
-	"coordinateY" : 8
+	"name" : "Lanchonete",
+	"coordinateX" : 27,
+	"coordinateY" : 12
 
 }
 ```
