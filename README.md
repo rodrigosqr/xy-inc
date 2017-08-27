@@ -1,7 +1,7 @@
 # xy-inc
 Desafio Back-End PL
 
-## Tecnolgias utilizadas
+## Tecnologias utilizadas
 
     Spring Boot
     Hibernate
@@ -9,7 +9,7 @@ Desafio Back-End PL
     Rest
     H2 Database
 
-## 1. Requisitos e Configurações
+## Requisitos e Configurações
 
 Para executar o projeto é necessária a instalação das seguintes ferramentas:
 
