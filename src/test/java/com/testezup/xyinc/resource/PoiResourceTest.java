@@ -1,91 +1,101 @@
 package com.testezup.xyinc.resource;
 
-import java.io.IOException;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testezup.xyinc.BaseTest;
 import com.testezup.xyinc.builder.PoiBuilder;
 import com.testezup.xyinc.model.Poi;
 import com.testezup.xyinc.repository.IPoiRepository;
+import com.testezup.xyinc.service.PoiService;
 
-
-
-public class PoiResourceTest extends BaseTest{
+public class PoiResourceTest extends BaseTest {
 
 	final String BASE_PATH = "http://localhost:9091/poi";
 
-	@Autowired
-	private IPoiRepository repository;
+	private MockMvc mockMvc;
 
-	@Autowired
-	private TestRestTemplate restTemplate;
+	@Mock
+	private IPoiRepository poiRepository;
+	
+	@Mock
+	private PoiService poiServiceMock;
+	
+	@InjectMocks
+	private PoiService poiService;
+
+	@InjectMocks
+	PoiResource poiResource;
 
 	private ObjectMapper MAPPER = new ObjectMapper();
 
 	@Before
 	public void setUp() throws Exception {
-
-		repository.deleteAll();		
-		PoiBuilder.buildAll().forEach(poi -> repository.save(poi));
-		restTemplate = new TestRestTemplate();
+		mockMvc = MockMvcBuilders.standaloneSetup(poiResource).build();
 	}
 
 	@Test
 	public void testSave() {
 
-		Poi poi = new Poi("Farmacia", 45L, 2L);
+		PoiBuilder.buildAll().forEach(poi -> {
+			try {
+				this.mockMvc
+						.perform(post(BASE_PATH).contentType(MediaType.APPLICATION_JSON_UTF8).content(
+								MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(PoiBuilder.build())))
+						.andExpect(status().is2xxSuccessful());
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 
-		ResponseEntity<Poi> response = restTemplate.postForEntity(BASE_PATH, poi, Poi.class);
-
-		Assert.assertEquals(response.getStatusCode(), HttpStatus.CREATED);
-		Assert.assertEquals("Farmacia", response.getBody().getname());
 	}
-	
-	@Test(expected = HttpMessageNotReadableException.class)
-	public void testSaveBadRequest()  {
-		Poi poi = new Poi("Farmácia", 45L, -2L);		
-		restTemplate.postForEntity(BASE_PATH, poi, Poi.class);
-	}	
-	
-	@Test
-	public void testFindAll() throws IOException{
-	 
-	    ResponseEntity<String> response = restTemplate
-	        .getForEntity(BASE_PATH, String.class);
-	 
-	    List<Poi> listPoi = MAPPER.readValue(response.getBody(), 
-	        MAPPER.getTypeFactory().constructCollectionType(List.class, Poi.class));
-	     
-	    Assert.assertEquals(response.getStatusCode(), HttpStatus.OK);
-	    Assert.assertFalse(listPoi.isEmpty());
-	    Assert.assertEquals(listPoi.size(), 7);
-	}
-	
-	@Test
-	public void testFindByProximity() throws IOException{
-		List<Poi> listPoi = PoiBuilder.buildAll();
-	    
-		ResponseEntity<String> response = restTemplate
-	        .getForEntity(BASE_PATH + "/proximity/20/10/10", String.class);
-	 
-	    List<Poi> listPoiResponse = MAPPER.readValue(response.getBody(), 
-	        MAPPER.getTypeFactory().constructCollectionType(List.class, Poi.class));
 
-		Assert.assertEquals(response.getStatusCode(), HttpStatus.OK);
-		Assert.assertTrue(listPoiResponse.size() == 4);
-		Assert.assertEquals(listPoiResponse.get(0), listPoi.get(0));
-		Assert.assertEquals(listPoiResponse.get(1), listPoi.get(2));
-		Assert.assertEquals(listPoiResponse.get(2), listPoi.get(4));
-		Assert.assertEquals(listPoiResponse.get(3), listPoi.get(5));
-	}	
+	@Test
+	public void testSaveBadRequest() throws JsonProcessingException, Exception {
+		Poi poi = PoiBuilder.build();
+		poi.setCoordinateY(-2L);
+		
+		this.mockMvc
+				.perform(post(BASE_PATH).contentType(MediaType.APPLICATION_JSON_UTF8)
+						.content(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(poi)))
+				.andExpect(status().is4xxClientError());
+	}
+
+	@Test
+	public void testFindAll() throws Exception {
+		Mockito.when(poiServiceMock.findAll()).thenReturn(PoiBuilder.buildAll());
+
+		mockMvc.perform(get(BASE_PATH)).andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andExpect(jsonPath("$", hasSize(7)));
+	}
+
+	@Test
+	public void testFindByProximity() throws Exception {
+		Mockito.when(poiRepository.findAll()).thenReturn(PoiBuilder.buildAll());
+		List<Poi> listPoi = poiService.findByProximity(20L,10L,10L);
+		Mockito.when(poiServiceMock.findByProximity(20L,10L,10L)).thenReturn(listPoi);
+
+		mockMvc.perform(get(BASE_PATH + "/proximity/20/10/10")).andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andExpect(jsonPath("$", hasSize(4)));
+
+	}
 }

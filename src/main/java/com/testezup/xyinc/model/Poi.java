@@ -8,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.validation.constraints.Digits;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -38,13 +37,12 @@ public class Poi implements Serializable {
 
 	@NotNull(message = "Coordenada X é obrigatória")
 	@Min(value=0, message="O valor deve ser inteiro não negativo.")
-	@Digits(fraction = 1, integer = 10, message ="msg2")
-	@Column(name = "coordenada_X", nullable = false)
+	@Column(name = "coordinateX", nullable = false)
 	private Long coordinateX;
 
 	@NotNull(message = "Coordenada Y é obrigatória")
 	@Min(value=0, message="O valor deve ser inteiro não negativo.")
-	@Column(name = "coordenada_Y", nullable = false)
+	@Column(name = "coordinateY", nullable = false)
 	private Long coordinateY;
 	
 	public Poi() {}
