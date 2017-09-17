@@ -6,11 +6,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.testezup.xyinc.BaseTest;
 import com.testezup.xyinc.builder.PoiBuilder;
 import com.testezup.xyinc.model.Poi;
 
+@Transactional
+@Rollback
 public class PoiRepositoryTest extends BaseTest{
 	
 	@Autowired
